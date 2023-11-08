@@ -61,7 +61,7 @@ async def create_event(context: Context, event: CreateEventArgumentConverter):
         return
 
     logger.info("Creating event")
-    await guild.create_scheduled_event(**event)
+    await guild.create_scheduled_event(**event)  # should catch exception and send back message
     logger.info(f"Successfully created event: {event.name}")
 
 
