@@ -44,13 +44,26 @@ class Event:
 class CreateEventArgumentConverter(Converter):
 
     async def convert(self, context: Context[BotT], *, arguments: str) -> Event:
-        parsed_arguments = shlex.split(arguments)
+        parsed_arguments = shlex.split(arguments)  # needs type conversion
         return Event(*parsed_arguments)
 
 
 @bot.command(name="Create Event")
 async def create_event(context: Context, event: CreateEventArgumentConverter):
-    pass
+    logger.info(f"Received request from {context.author.id} to create event {event}")
+
+    events = await context.guild.fetch_scheduled_events()
+    does_event_exist = any(event.name == event.name for event in events)
+
+    if does_event_exist:
+        logger.info(f"Event {event.name} already exist")
+        await context.send(f"Hi {context.author.id}. I could not create this event. It is already scheduled.")
+        return
+
+    logger.info("Creating event")
+    await guild.create_scheduled_event(**event)
+    logger.info(f"Successfully created event: {event.name}")
+
 
 
 
