@@ -41,8 +41,7 @@ async def on_ready():
 
 
 async def does_event_exist(event_name: str) -> bool:
-    events = await guild.fetch_scheduled_events()
-    return any(event.name == event_name for event in events)
+    return any(event.name == event_name for event in await guild.fetch_scheduled_events())
 
 
 def create_event(event_information: dict) -> dict:
