@@ -52,8 +52,8 @@ class CreateEventArgumentConverter(Converter):
 async def create_event(context: Context, event: CreateEventArgumentConverter):
     logger.info(f"Received request from {context.author.id} to create event {event}")
 
-    events = await context.guild.fetch_scheduled_events()
-    does_event_exist = any(event.name == event.name for event in events)
+    scheduled_events = await context.guild.fetch_scheduled_events()
+    does_event_exist = any(scheduled_event.name == event.name for scheduled_event in scheduled_events)
 
     if does_event_exist:
         logger.info(f"Event {event.name} already exist")
