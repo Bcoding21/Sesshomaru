@@ -1,0 +1,9 @@
+guildId: ""
+token: ""
+events:
+  - name: ""
+    description: ""
+    day: ""
+    start_hour: ""
+    start_minute: ""
+    duration: ""

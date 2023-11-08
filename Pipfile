@@ -6,8 +6,11 @@ name = "pypi"
 [packages]
 discord = "*"
 pytz = "*"
+pyyaml = "*"
 
 [dev-packages]
+pytest = "*"
+pytest-mock = "*"
 
 [requires]
 python_version = "3.11"
