@@ -1,5 +1,5 @@
 import shlex
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 from pathlib import Path
 from typing import Tuple
 
@@ -32,39 +32,43 @@ guild = bot.get_guild(config["guildId"])
 
 
 @dataclass
-class Event:
-    name: str
-    description: str
-    day: str
-    start_time: str
-    start_minute: str
-    duration: str
+class ScheduleEventRequest:
+    name: str = ""
+    description: str = ""
+    day: str = ""
+    start_time: str = ""
+    start_minute: str = ""
+    duration: str = ""
 
 
-class CreateEventArgumentConverter(Converter):
+class CreateEventArgumentDeserializer(Converter):
 
-    async def convert(self, context: Context[BotT], *, arguments: str) -> Event:
+    async def convert(self, context: Context[BotT], *, arguments: str) -> ScheduleEventRequest:
         parsed_arguments = shlex.split(arguments)  # needs type conversion
-        return Event(*parsed_arguments)
+        return ScheduleEventRequest(*parsed_arguments)
 
 
 @bot.command(name="Create Event")
-async def create_event(context: Context, event: CreateEventArgumentConverter):
-    logger.info(f"Received request from {context.author.id} to create event {event}")
+async def create_event(context: Context, create_event_request: CreateEventArgumentDeserializer):
+    logger.info(f"Received request from {context.author.id} to create event {create_event_request}")
 
-    scheduled_events = await context.guild.fetch_scheduled_events()
-    does_event_exist = any(scheduled_event.name == event.name for scheduled_event in scheduled_events)
+    try:
+        logger.info(f"Determining if event already exist")
+        scheduled_events = await context.guild.fetch_scheduled_events()
+        does_event_exist = any(scheduled_event.name == create_event_request.name for scheduled_event in scheduled_events)
 
-    if does_event_exist:
-        logger.info(f"Event {event.name} already exist")
-        await context.send(f"Hi {context.author.id}. I could not create this event. It is already scheduled.")
-        return
+        if does_event_exist:
+            raise ValueError("Event already exist")
 
-    logger.info("Creating event")
-    await guild.create_scheduled_event(**event)  # should catch exception and send back message
-    logger.info(f"Successfully created event: {event.name}")
+        logger.info("Creating event")
+        await context.guild.create_scheduled_event(**asdict(create_event_request))  # should catch exception and send back message
+        logger.info(f"Successfully created event: {create_event_request.name}")
 
+    except Exception as e:
+        logger.exception("Could not create event", exc_info=e)
+        await context.send(f"Could not create event {create_event_request.name}")
 
+    await context.send(f"Event {create_event_request.name} created by {context.author.id}")
 
 
 @bot.event
@@ -88,21 +92,21 @@ async def does_event_exist(event_name: str) -> bool:
     return any(event.name == event_name for event in await guild.fetch_scheduled_events())
 
 
-def create_event(event_information: dict) -> dict:
-    event_start_hour = event_information["start_hour"]
-    event_start_minute = event_information["start_minute"]
-    event_duration = event_information["duration"]
-    start_date, end_date = _determine_start_and_end_date(event_start_hour, event_start_minute, event_duration)
-
-    return {
-        "name": event_information["name"],
-        "description": event_information["description"],
-        "start_time": start_date,
-        "end_time": end_date,
-        "entity_type": discord.EntityType.external,
-        "privacy_level": discord.PrivacyLevel.guild_only,
-        "location": "",
-    }
+# def create_event(event_information: dict) -> dict:
+#     event_start_hour = event_information["start_hour"]
+#     event_start_minute = event_information["start_minute"]
+#     event_duration = event_information["duration"]
+#     start_date, end_date = _determine_start_and_end_date(event_start_hour, event_start_minute, event_duration)
+#
+#     return {
+#         "name": event_information["name"],
+#         "description": event_information["description"],
+#         "start_time": start_date,
+#         "end_time": end_date,
+#         "entity_type": discord.EntityType.external,
+#         "privacy_level": discord.PrivacyLevel.guild_only,
+#         "location": "",
+#     }
 
 
 def _determine_start_and_end_date(start_hour: int, start_minute: int, duration: int) -> Tuple[datetime, datetime]:
