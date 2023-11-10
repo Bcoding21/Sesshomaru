@@ -23,8 +23,7 @@ async def create_event(context: Context, request: CreateEventArgumentDeserialize
     try:
         logger.info(f"Determining if event already exist")
         scheduled_events = await context.guild.fetch_scheduled_events()
-        does_event_exist = any(
-            scheduled_event.name == request.name for scheduled_event in scheduled_events)
+        does_event_exist = any(event.name == request.name for event in scheduled_events)
 
         if does_event_exist:
             raise ValueError("Event already exist")
