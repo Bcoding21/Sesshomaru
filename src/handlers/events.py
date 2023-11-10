@@ -17,26 +17,26 @@ logger.setLevel(logging.DEBUG)
 
 
 @bot.command(name="Create Event")
-async def create_event(context: Context, create_event_request: CreateEventArgumentDeserializer):
-    logger.info(f"Received request from {context.author.id} to create event {create_event_request}")
+async def create_event(context: Context, request: CreateEventArgumentDeserializer):
+    logger.info(f"Received request from {context.author.id} to create event {request}")
 
     try:
         logger.info(f"Determining if event already exist")
         scheduled_events = await context.guild.fetch_scheduled_events()
         does_event_exist = any(
-            scheduled_event.name == create_event_request.name for scheduled_event in scheduled_events)
+            scheduled_event.name == request.name for scheduled_event in scheduled_events)
 
         if does_event_exist:
             raise ValueError("Event already exist")
 
         logger.info("Creating event")
-        await context.guild.create_scheduled_event(**asdict(create_event_request))
-        logger.info(f"Successfully created event: {create_event_request.name}")
-        await context.send(f"Event {create_event_request.name} created by {context.author.id}")
+        await context.guild.create_scheduled_event(**asdict(request))
+        logger.info(f"Successfully created event: {request.name}")
+        await context.send(f"Event {request.name} created by {context.author.id}")
 
     except Exception as e:
         logger.exception("Could not create event", exc_info=e)
-        await context.send(f"Could not create event {create_event_request.name}")
+        await context.send(f"Could not create event {request.name}")
 
 
 @bot.command(name="Delete Event")
