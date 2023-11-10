@@ -30,8 +30,7 @@ async def create_event(context: Context, create_event_request: CreateEventArgume
             raise ValueError("Event already exist")
 
         logger.info("Creating event")
-        await context.guild.create_scheduled_event(
-            **asdict(create_event_request))  # should catch exception and send back message
+        await context.guild.create_scheduled_event(**asdict(create_event_request))
         logger.info(f"Successfully created event: {create_event_request.name}")
         await context.send(f"Event {create_event_request.name} created by {context.author.id}")
 
